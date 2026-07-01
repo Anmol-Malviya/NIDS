@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NIDS Health Monitor</title>
+    <link rel="stylesheet" href="/static/health.css">
+</head>
+<body>
+<a href="/alerts">Back</a>
+    <h1>Advanced NIDS Security Health Monitor</h1>
+    
+    <div class="dashboard-grid">
+        <div class="card">
+            <h3>[Sensor Hardware Health]</h3>
+            <div id="system-health">Loading...</div>
+        </div>
+
+        <div class="card">
+            <h3>[Network Flow Dynamics]</h3>
+            <div id="flow-health">Loading...</div>
+        </div>
+
+        <div class="card">
+            <h3>[Traffic Integrity & Delay]</h3>
+            <div id="integrity-health">Loading...</div>
+        </div>
+
+        <div class="card">
+            <h3>[Firewall & Socket Inspection]</h3>
+            <div id="socket-health">Loading...</div>
+        </div>
+    </div>
+
+<script>
+async function loadHealth(){
+    try {
+        const response = await fetch('/api/health')
+        const data = await response.json()
+        
+        // 1. Hardware
+        document.getElementById("system-health").innerHTML = `
+            <p><strong>CPU Utilization:</strong> ${data.cpu}%</p>
+            <p><strong>Memory Usage:</strong> ${data.memory}%</p>
+            <p><strong>Disk Space Usage:</strong> ${data.disk}%</p>
+        `;
+        
+        // 2. Flow Dynamics
+        document.getElementById("flow-health").innerHTML = `
+            <p><strong>Inbound Speed:</strong> ${data.pps_in} PPS</p>
+            <p><strong>Outbound Speed:</strong> ${data.pps_out} PPS</p>
+            <p><strong>Total Received:</strong> ${data.mb_recv} MB</p>
+            <p><strong>Total Sent:</strong> ${data.mb_sent} MB</p>
+        `;
+        
+        // 3. Integrity
+        document.getElementById("integrity-health").innerHTML = `
+            <p><strong>Diagnostic Latency:</strong> ${data.latency}</p>
+            <p><strong>Inbound Errors:</strong> ${data.errors}</p>
+            <p><strong>Inbound Drops:</strong> ${data.drops}</p>
+        `;
+        
+        // 4. Sockets
+        document.getElementById("socket-health").innerHTML = `
+            <p><strong>ESTABLISHED (Live):</strong> ${data.established}</p>
+            <p><strong>SYN_RECV (DoS Aim):</strong> ${data.syn_recv}</p>
+            <p><strong class="${data.time_wait > 50 ? 'danger-text' : ''}">TIME_WAIT (Scans):</strong> ${data.time_wait}</p>
+            <p><strong>SYN_SENT (Outbound):</strong> ${data.syn_sent}</p>
+        `;
+    } catch (err) {
+        console.error("Error fetching health metrics:", err);
+    }
+}
+
+loadHealth();
+setInterval(loadHealth, 3000);
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<title>Alerts</title>
+
+<link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+<body>
+
+<div class="nav">
+
+<a href="/dashboard">Dashboard</a>
+<a href="/alerts">Alerts</a>
+<a href="/health">Health</a>
+
+</div>
+
+<h1>Alerts</h1>
+
+<table>
+
+<tr>
+
+<th>ID</th>
+<th>Attack</th>
+<th>Severity</th>
+<th>Source IP</th>
+<th>Destination IP</th>
+<th>Status</th>
+<th>Details</th>
+
+</tr>
+
+{% for alert in alerts %}
+
+<tr>
+
+<td>{{ alert.id }}</td>
+
+<td>{{ alert.attack_type }}</td>
+
+<td class="{{ alert.severity }}">
+{{ alert.severity }}
+</td>
+
+<td>{{ alert.src_ip }}</td>
+
+<td>{{ alert.dst_ip }}</td>
+
+<td>{{ alert.status }}</td>
+
+<td>
+
+<a href="/details/{{ alert.id }}">
+
+View
+
+</a>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</body>
+
+</html>

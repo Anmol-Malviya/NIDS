@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<title>Details</title>
+
+<link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+<body>
+
+<h1>Alert Details</h1>
+
+<a href="/alerts">Back</a>
+
+<div class="details">
+
+<p><b>Attack:</b> {{ alert.attack_type }}</p>
+
+<p><b>Severity:</b> {{ alert.severity }}</p>
+
+<p><b>Source IP:</b> {{ alert.src_ip }}</p>
+
+<p><b>Destination IP:</b> {{ alert.dst_ip }}</p>
+
+<p><b>Source Port:</b> {{ alert.source_port }}</p>
+
+<p><b>Destination Port:</b> {{ alert.destination_port }}</p>
+
+<p><b>Protocol:</b> {{ alert.protocol }}</p>
+
+<p><b>Flow Duration:</b> {{ alert.flow_duration }}</p>
+
+<p><b>Status:</b> {{ alert.status }}</p>
+
+<p><b>Timestamp:</b> {{ alert.timestamp }}</p>
+
+<button onclick="resolveAlert()">
+
+Resolve Alert
+
+</button>
+
+</div>
+
+<script>
+
+async function resolveAlert(){
+
+    await fetch('/api/resolve/{{ alert.id }}')
+
+    location.reload()
+}
+
+</script>
+
+</body>
+
+</html>

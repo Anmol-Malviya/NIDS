@@ -1,0 +1,55 @@
+/* Clean Reset & Dark Minimalist Background */
+body {
+    background-color:#d1cfcf;
+    color: #0a1709;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 30px;
+}
+
+h1 {
+    text-align: center;
+    color: black;
+    border-bottom: 2px solid #222;
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+}
+
+/* 2x2 Grid Layout for Dashboard Cards */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Individual Card Styling */
+.card {
+    background-color: white;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.card h3 {
+    margin-top: 0;
+    color: #4caf50; /* Clean hacker-green section headers */
+    border-bottom: 1px solid #333;
+    padding-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+.card p {
+    margin: 12px 0;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Highlight style if TIME_WAIT spikes */
+.danger-text {
+    color: #ff5252;
+    font-weight: bold;
+}

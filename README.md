@@ -32,7 +32,7 @@ Four models were benchmarked (Random Forest, XGBoost, LightGBM, SVM); **XGBoost 
 ## 🏗️ System Architecture
 
 <p align="center">
-  <img src="docs/architecture-diagram.jpg" alt="Architecture Diagram" width="500" height="700"/>
+  <img src="docs/architecture-diagram.jpg" alt="Architecture Diagram" width="500" height="800"/>
 </p>
 
 

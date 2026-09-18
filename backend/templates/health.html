@@ -1,74 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>NIDS Health Monitor</title>
-    <link rel="stylesheet" href="/static/health.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIDS — System Health</title>
+  <meta name="description" content="NIDS real-time system health and network metrics">
+  <link rel="stylesheet" href="/static/nids.css">
 </head>
 <body>
-<a href="/alerts">Back</a>
-    <h1>Advanced NIDS Security Health Monitor</h1>
-    
-    <div class="dashboard-grid">
-        <div class="card">
-            <h3>[Sensor Hardware Health]</h3>
-            <div id="system-health">Loading...</div>
-        </div>
 
-        <div class="card">
-            <h3>[Network Flow Dynamics]</h3>
-            <div id="flow-health">Loading...</div>
-        </div>
+<!-- NAV -->
+<nav class="nav">
+  <a class="nav-brand" href="/dashboard">
+    <div class="nav-brand-icon">🛡️</div>
+    <span class="nav-brand-text">NIDS</span>
+  </a>
+  <a href="/dashboard">Dashboard</a>
+  <a href="/alerts">Alerts</a>
+  <a href="/health" class="active">Health</a>
+  <div class="nav-status" id="live-badge">
+    <div class="nav-status-dot"></div>
+    LIVE
+  </div>
+</nav>
 
-        <div class="card">
-            <h3>[Traffic Integrity & Delay]</h3>
-            <div id="integrity-health">Loading...</div>
-        </div>
+<div class="page-wrapper">
 
-        <div class="card">
-            <h3>[Firewall & Socket Inspection]</h3>
-            <div id="socket-health">Loading...</div>
+  <div class="page-header flex items-center justify-between">
+    <div>
+      <h1>System Health</h1>
+      <p>Real-time sensor hardware, network flow, and socket diagnostics · auto-refreshes every 3s</p>
+    </div>
+    <span style="font-size:12px; color:var(--text-muted); font-family:'JetBrains Mono',monospace;" id="last-update">—</span>
+  </div>
+
+  <!-- Hardware Health -->
+  <div class="two-col mb-6">
+    <div class="card">
+      <div class="section-title">🖥 Sensor Hardware</div>
+
+      <div class="metric-row">
+        <div class="metric-label">CPU Usage</div>
+        <div class="metric-bar-bg">
+          <div class="metric-bar-fill" id="bar-cpu" style="width:0%"></div>
         </div>
+        <div class="metric-value" id="val-cpu">—</div>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-label">Memory Usage</div>
+        <div class="metric-bar-bg">
+          <div class="metric-bar-fill" id="bar-mem" style="width:0%"></div>
+        </div>
+        <div class="metric-value" id="val-mem">—</div>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-label">Disk Usage</div>
+        <div class="metric-bar-bg">
+          <div class="metric-bar-fill" id="bar-disk" style="width:0%"></div>
+        </div>
+        <div class="metric-value" id="val-disk">—</div>
+      </div>
     </div>
 
+    <!-- Network Flow -->
+    <div class="card">
+      <div class="section-title">📡 Network Flow Dynamics</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <div class="detail-item">
+          <div class="detail-item-label">Inbound Speed</div>
+          <div class="detail-item-value" id="val-pps-in">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">PPS</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Outbound Speed</div>
+          <div class="detail-item-value" id="val-pps-out">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">PPS</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Total Received</div>
+          <div class="detail-item-value" id="val-mb-recv">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">MB</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Total Sent</div>
+          <div class="detail-item-value" id="val-mb-sent">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">MB</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Integrity + Sockets -->
+  <div class="two-col">
+    <div class="card">
+      <div class="section-title">🔗 Traffic Integrity &amp; Delay</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;">
+        <div class="detail-item">
+          <div class="detail-item-label">Latency</div>
+          <div class="detail-item-value" id="val-latency" style="color:var(--green)">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Inbound Errors</div>
+          <div class="detail-item-value" id="val-errors">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Inbound Drops</div>
+          <div class="detail-item-value" id="val-drops">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">🔌 Firewall &amp; Socket Inspection</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <div class="detail-item">
+          <div class="detail-item-label">ESTABLISHED</div>
+          <div class="detail-item-value" id="val-established" style="color:var(--green)">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Live connections</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">SYN_RECV</div>
+          <div class="detail-item-value" id="val-syn-recv" style="color:var(--amber)">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">DoS indicator</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">TIME_WAIT</div>
+          <div class="detail-item-value" id="val-time-wait">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Scan indicator</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">SYN_SENT</div>
+          <div class="detail-item-value" id="val-syn-sent">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Outbound probes</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
 <script>
-async function loadHealth(){
-    try {
-        const response = await fetch('/api/health')
-        const data = await response.json()
-        
-        // 1. Hardware
-        document.getElementById("system-health").innerHTML = `
-            <p><strong>CPU Utilization:</strong> ${data.cpu}%</p>
-            <p><strong>Memory Usage:</strong> ${data.memory}%</p>
-            <p><strong>Disk Space Usage:</strong> ${data.disk}%</p>
-        `;
-        
-        // 2. Flow Dynamics
-        document.getElementById("flow-health").innerHTML = `
-            <p><strong>Inbound Speed:</strong> ${data.pps_in} PPS</p>
-            <p><strong>Outbound Speed:</strong> ${data.pps_out} PPS</p>
-            <p><strong>Total Received:</strong> ${data.mb_recv} MB</p>
-            <p><strong>Total Sent:</strong> ${data.mb_sent} MB</p>
-        `;
-        
-        // 3. Integrity
-        document.getElementById("integrity-health").innerHTML = `
-            <p><strong>Diagnostic Latency:</strong> ${data.latency}</p>
-            <p><strong>Inbound Errors:</strong> ${data.errors}</p>
-            <p><strong>Inbound Drops:</strong> ${data.drops}</p>
-        `;
-        
-        // 4. Sockets
-        document.getElementById("socket-health").innerHTML = `
-            <p><strong>ESTABLISHED (Live):</strong> ${data.established}</p>
-            <p><strong>SYN_RECV (DoS Aim):</strong> ${data.syn_recv}</p>
-            <p><strong class="${data.time_wait > 50 ? 'danger-text' : ''}">TIME_WAIT (Scans):</strong> ${data.time_wait}</p>
-            <p><strong>SYN_SENT (Outbound):</strong> ${data.syn_sent}</p>
-        `;
-    } catch (err) {
-        console.error("Error fetching health metrics:", err);
-    }
+function setBar(barId, pct) {
+  const bar = document.getElementById(barId);
+  if (!bar) return;
+  bar.style.width = pct + '%';
+  if (pct > 80) bar.classList.add('danger');
+  else bar.classList.remove('danger');
+}
+
+async function loadHealth() {
+  try {
+    const r = await fetch('/api/health');
+    const d = await r.json();
+
+    // Hardware
+    setBar('bar-cpu', d.cpu);   document.getElementById('val-cpu').textContent   = d.cpu + '%';
+    setBar('bar-mem', d.memory); document.getElementById('val-mem').textContent   = d.memory + '%';
+    setBar('bar-disk', d.disk); document.getElementById('val-disk').textContent   = d.disk + '%';
+
+    // Flow
+    document.getElementById('val-pps-in').textContent   = d.pps_in;
+    document.getElementById('val-pps-out').textContent  = d.pps_out;
+    document.getElementById('val-mb-recv').textContent  = d.mb_recv;
+    document.getElementById('val-mb-sent').textContent  = d.mb_sent;
+
+    // Integrity
+    document.getElementById('val-latency').textContent  = d.latency;
+    document.getElementById('val-errors').textContent   = d.errors;
+    document.getElementById('val-drops').textContent    = d.drops;
+
+    // Sockets
+    document.getElementById('val-established').textContent = d.established;
+    document.getElementById('val-syn-recv').textContent    = d.syn_recv;
+    const tw = document.getElementById('val-time-wait');
+    tw.textContent = d.time_wait;
+    tw.style.color = d.time_wait > 50 ? 'var(--red)' : 'var(--text-primary)';
+    document.getElementById('val-syn-sent').textContent   = d.syn_sent;
+
+    // Last update
+    document.getElementById('last-update').textContent =
+      'Updated ' + new Date().toLocaleTimeString();
+
+  } catch (e) {
+    console.error('Health fetch error:', e);
+  }
 }
 
 loadHealth();

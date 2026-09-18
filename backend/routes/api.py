@@ -21,9 +21,9 @@ from firebase_admin import credentials, messaging
 try:
     cred = credentials.Certificate("serviceAccountKey.json")
     firebase_admin.initialize_app(cred)
-    print("🚀 Firebase Admin SDK successfully initialized.")
+    print("Firebase Admin SDK successfully initialized.")
 except Exception as e:
-    print(f"⚠️ Firebase initialization skipped or failed: {e}")
+    print(f"Warning: Firebase initialization skipped or failed: {e}")
 
 def send_fcm_notification(alert_id, attack_type, severity):
     """
@@ -46,9 +46,9 @@ def send_fcm_notification(alert_id, attack_type, severity):
         )
         # Relay the payload construction to Firebase Cloud Messaging api
         response = messaging.send(message)
-        print(f"✨ FCM notification dispatched successfully: {response}")
+        print(f"FCM notification dispatched successfully: {response}")
     except Exception as e:
-        print(f"❌ Failed to transmit message down to FCM: {e}")
+        print(f"Failed to transmit message to FCM: {e}")
 # =====================================================================
 
 api_bp = Blueprint("api", __name__)
@@ -130,6 +130,22 @@ def get_alerts():
     return jsonify([dict(row) for row in alerts])
 
 
+# GET SINGLE ALERT
+@api_bp.route("/api/alerts/<int:id>")
+def get_alert(id):
+    conn = get_db()
+    alert = conn.execute("""
+    SELECT * FROM alerts
+    WHERE id=?
+    """, (id,)).fetchone()
+    conn.close()
+    
+    if alert is None:
+        return jsonify({"error": "Not found"}), 404
+        
+    return jsonify(dict(alert))
+
+
 # STATS
 @api_bp.route("/api/stats")
 def stats():
@@ -202,11 +218,20 @@ def health():
     except Exception:
         states = {"ESTABLISHED": 0, "SYN_RECV": 0, "TIME_WAIT": 0, "SYN_SENT": 0}
 
+    # DB Connection Check
+    try:
+        conn = get_db()
+        conn.execute("SELECT 1")
+        conn.close()
+        db_status = "connected"
+    except Exception:
+        db_status = "error"
+
     # Return the structured payload matching your advanced monitor
     return jsonify({
-        "cpu": psutil.cpu_percent(interval=0.1),
-        "memory": psutil.virtual_memory().percent,
-        "disk": psutil.disk_usage('/').percent,
+        "cpu_percent": psutil.cpu_percent(interval=0.1),
+        "memory_percent": psutil.virtual_memory().percent,
+        "disk_percent": psutil.disk_usage('/').percent,
         "pps_in": pps_received,
         "pps_out": pps_sent,
         "mb_recv": round(io_counters.bytes_recv / (1024 * 1024), 2),
@@ -217,7 +242,8 @@ def health():
         "established": states["ESTABLISHED"],
         "syn_recv": states["SYN_RECV"],
         "time_wait": states["TIME_WAIT"],
-        "syn_sent": states["SYN_SENT"]
+        "syn_sent": states["SYN_SENT"],
+        "db_status": db_status
     })
 
 

@@ -1,62 +1,129 @@
 <!DOCTYPE html>
-
-<html>
-
+<html lang="en">
 <head>
-
-<title>Details</title>
-
-<link rel="stylesheet" href="/static/style.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIDS — Alert #{{ alert.id if alert else '?' }}</title>
+  <meta name="description" content="Detailed view of NIDS alert">
+  <link rel="stylesheet" href="/static/nids.css">
 </head>
-
 <body>
 
-<h1>Alert Details</h1>
+<!-- NAV -->
+<nav class="nav">
+  <a class="nav-brand" href="/dashboard">
+    <div class="nav-brand-icon">🛡️</div>
+    <span class="nav-brand-text">NIDS</span>
+  </a>
+  <a href="/dashboard">Dashboard</a>
+  <a href="/alerts" class="active">Alerts</a>
+  <a href="/health">Health</a>
+  <div class="nav-status">
+    <div class="nav-status-dot"></div>
+    LIVE
+  </div>
+</nav>
 
-<a href="/alerts">Back</a>
+<div class="page-wrapper">
 
-<div class="details">
+  {% if alert %}
+  <!-- Header -->
+  <div class="page-header flex items-center justify-between">
+    <div>
+      <h1>Alert #{{ alert.id }}</h1>
+      <p>Detailed forensic breakdown of the detected threat event</p>
+    </div>
+    <div class="flex gap-2">
+      <a href="/alerts" class="btn btn-ghost">← Back to Alerts</a>
+      {% if alert.status != 'RESOLVED' %}
+      <button class="btn btn-resolve" id="resolve-btn" onclick="resolveAlert()">✓ Resolve Alert</button>
+      {% else %}
+      <span class="btn btn-ghost" style="cursor:default; opacity:0.5;">✓ Resolved</span>
+      {% endif %}
+    </div>
+  </div>
 
-<p><b>Attack:</b> {{ alert.attack_type }}</p>
+  <!-- Main card -->
+  <div class="card mb-6">
+    <!-- Top: Attack type + severity -->
+    <div class="flex items-center justify-between mb-6" style="padding-bottom:20px; border-bottom:1px solid var(--border);">
+      <div>
+        <div class="card-label">Attack Classification</div>
+        <div style="font-size:26px; font-weight:800; color:var(--red); margin-top:4px;">{{ alert.attack_type }}</div>
+      </div>
+      <div class="text-right">
+        <div class="card-label">Severity Level</div>
+        <div style="margin-top:6px;">
+          <span class="badge {{ alert.severity }}" style="font-size:14px; padding:8px 18px;">
+            {{ alert.severity }}
+          </span>
+        </div>
+      </div>
+    </div>
 
-<p><b>Severity:</b> {{ alert.severity }}</p>
+    <div class="section-title">Network Metadata</div>
+    <div class="detail-grid">
+      <div class="detail-item">
+        <div class="detail-item-label">Source IP</div>
+        <div class="detail-item-value">{{ alert.src_ip }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-item-label">Destination IP</div>
+        <div class="detail-item-value">{{ alert.dst_ip }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-item-label">Source Port</div>
+        <div class="detail-item-value">{{ alert.source_port }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-item-label">Destination Port</div>
+        <div class="detail-item-value">{{ alert.destination_port }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-item-label">Protocol</div>
+        <div class="detail-item-value">{{ alert.protocol }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-item-label">Flow Duration</div>
+        <div class="detail-item-value">{{ alert.flow_duration }}</div>
+      </div>
+    </div>
 
-<p><b>Source IP:</b> {{ alert.src_ip }}</p>
+    <div class="section-title mt-4">Event Metadata</div>
+    <div class="detail-grid">
+      <div class="detail-item">
+        <div class="detail-item-label">Timestamp</div>
+        <div class="detail-item-value">{{ alert.timestamp }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-item-label">Status</div>
+        <div class="detail-item-value">
+          <span class="badge {% if alert.status == 'RESOLVED' %}badge-resolved{% else %}badge-active{% endif %}">
+            {{ alert.status }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<p><b>Destination IP:</b> {{ alert.dst_ip }}</p>
-
-<p><b>Source Port:</b> {{ alert.source_port }}</p>
-
-<p><b>Destination Port:</b> {{ alert.destination_port }}</p>
-
-<p><b>Protocol:</b> {{ alert.protocol }}</p>
-
-<p><b>Flow Duration:</b> {{ alert.flow_duration }}</p>
-
-<p><b>Status:</b> {{ alert.status }}</p>
-
-<p><b>Timestamp:</b> {{ alert.timestamp }}</p>
-
-<button onclick="resolveAlert()">
-
-Resolve Alert
-
-</button>
+  {% else %}
+  <div class="card" style="text-align:center; padding:64px;">
+    <div style="font-size:48px; margin-bottom:16px;">🔍</div>
+    <h2 style="color:var(--text-secondary);">Alert not found</h2>
+    <p style="color:var(--text-muted); margin-top:8px;">This alert may have been deleted or the ID is invalid.</p>
+    <a href="/alerts" class="btn btn-primary" style="margin-top:24px; display:inline-flex;">← Back to Alerts</a>
+  </div>
+  {% endif %}
 
 </div>
 
 <script>
-
-async function resolveAlert(){
-
-    await fetch('/api/resolve/{{ alert.id }}')
-
-    location.reload()
+async function resolveAlert() {
+  const btn = document.getElementById('resolve-btn');
+  if (btn) btn.disabled = true;
+  await fetch('/api/resolve/{{ alert.id }}');
+  location.reload();
 }
-
 </script>
-
 </body>
-
 </html>

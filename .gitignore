@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+env.bak/
+venv.bak/
+.env
+
+# Node.js
+node_modules/
+.next/
+out/
+build/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Android
+mobile-app/NidsMonitor/.gradle/
+mobile-app/NidsMonitor/build/
+mobile-app/NidsMonitor/*/build/
+mobile-app/NidsMonitor/local.properties
+mobile-app/NidsMonitor/*/google-services.json
+.cxx/
+*.apk
+*.ap_
+*.aab
+
+# IDEs and OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

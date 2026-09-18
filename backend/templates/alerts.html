@@ -1,75 +1,85 @@
 <!DOCTYPE html>
-
-<html>
-
+<html lang="en">
 <head>
-
-<title>Alerts</title>
-
-<link rel="stylesheet" href="/static/style.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIDS — Alerts</title>
+  <meta name="description" content="All NIDS security alerts log">
+  <link rel="stylesheet" href="/static/nids.css">
 </head>
-
 <body>
 
-<div class="nav">
+<!-- NAV -->
+<nav class="nav">
+  <a class="nav-brand" href="/dashboard">
+    <div class="nav-brand-icon">🛡️</div>
+    <span class="nav-brand-text">NIDS</span>
+  </a>
+  <a href="/dashboard">Dashboard</a>
+  <a href="/alerts" class="active">Alerts</a>
+  <a href="/health">Health</a>
+  <div class="nav-status">
+    <div class="nav-status-dot"></div>
+    LIVE
+  </div>
+</nav>
 
-<a href="/dashboard">Dashboard</a>
-<a href="/alerts">Alerts</a>
-<a href="/health">Health</a>
+<!-- PAGE -->
+<div class="page-wrapper">
+
+  <div class="page-header flex items-center justify-between">
+    <div>
+      <h1>Alert Log</h1>
+      <p>Full history of detected network intrusion events</p>
+    </div>
+    <a href="/dashboard" class="btn btn-ghost">← Dashboard</a>
+  </div>
+
+  <div class="card">
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Timestamp</th>
+            <th>Attack Type</th>
+            <th>Severity</th>
+            <th>Source IP</th>
+            <th>Destination IP</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for alert in alerts %}
+          <tr>
+            <td class="mono" style="color:var(--text-muted)">#{{ alert.id }}</td>
+            <td class="mono" style="color:var(--text-secondary); font-size:12px;">{{ alert.timestamp }}</td>
+            <td><strong>{{ alert.attack_type }}</strong></td>
+            <td><span class="badge {{ alert.severity }}">{{ alert.severity }}</span></td>
+            <td class="mono">{{ alert.src_ip }}</td>
+            <td class="mono">{{ alert.dst_ip }}</td>
+            <td>
+              <span class="badge {% if alert.status == 'RESOLVED' %}badge-resolved{% else %}badge-active{% endif %}">
+                {{ alert.status }}
+              </span>
+            </td>
+            <td>
+              <a href="/details/{{ alert.id }}" class="btn btn-ghost" style="font-size:12px; padding:5px 12px;">View →</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" style="text-align:center; color:var(--text-muted); padding:48px;">
+              No alerts recorded yet. Go to the Dashboard to simulate an attack.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
 </div>
-
-<h1>Alerts</h1>
-
-<table>
-
-<tr>
-
-<th>ID</th>
-<th>Attack</th>
-<th>Severity</th>
-<th>Source IP</th>
-<th>Destination IP</th>
-<th>Status</th>
-<th>Details</th>
-
-</tr>
-
-{% for alert in alerts %}
-
-<tr>
-
-<td>{{ alert.id }}</td>
-
-<td>{{ alert.attack_type }}</td>
-
-<td class="{{ alert.severity }}">
-{{ alert.severity }}
-</td>
-
-<td>{{ alert.src_ip }}</td>
-
-<td>{{ alert.dst_ip }}</td>
-
-<td>{{ alert.status }}</td>
-
-<td>
-
-<a href="/details/{{ alert.id }}">
-
-View
-
-</a>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</table>
-
 </body>
-
 </html>

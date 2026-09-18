@@ -1,130 +1,261 @@
 <!DOCTYPE html>
-
-<html>
-
+<html lang="en">
 <head>
-
-<title>Dashboard</title>
-
-<link rel="stylesheet" href="/static/style.css">
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIDS — Dashboard</title>
+  <meta name="description" content="NIDS real-time threat monitoring dashboard">
+  <link rel="stylesheet" href="/static/nids.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
 
-<div class="nav">
+<!-- NAV -->
+<nav class="nav">
+  <a class="nav-brand" href="/dashboard">
+    <div class="nav-brand-icon">🛡️</div>
+    <span class="nav-brand-text">NIDS</span>
+  </a>
+  <a href="/dashboard" class="active">Dashboard</a>
+  <a href="/alerts">Alerts</a>
+  <a href="/health">Health</a>
+  <div class="nav-status">
+    <div class="nav-status-dot"></div>
+    LIVE
+  </div>
+</nav>
 
-<a href="/dashboard">Dashboard</a>
-<a href="/alerts">Alerts</a>
-<a href="/health">Health</a>
+<!-- PAGE -->
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Threat Dashboard</h1>
+    <p>Real-time network intrusion monitoring powered by XGBoost ML (99.93% accuracy)</p>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="stat-grid" id="stat-grid">
+    <div class="card">
+      <div class="card-label">Total Alerts</div>
+      <div class="card-value" id="total" style="color:var(--cyan)">—</div>
+      <div class="card-sub">All time detections</div>
+    </div>
+    <div class="card">
+      <div class="card-label">High Severity</div>
+      <div class="card-value" id="high" style="color:var(--red)">—</div>
+      <div class="card-sub">Critical threats</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Medium Severity</div>
+      <div class="card-value" id="medium" style="color:var(--amber)">—</div>
+      <div class="card-sub">Warning level events</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Low Severity</div>
+      <div class="card-value" id="low" style="color:var(--green)">—</div>
+      <div class="card-sub">Informational alerts</div>
+    </div>
+  </div>
+
+  <!-- Simulate + Chart -->
+  <div class="two-col mb-6">
+    <!-- Simulate Attack -->
+    <div class="card">
+      <div class="section-title">Simulate Attack</div>
+      <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
+        Trigger ML inference on a sampled traffic vector. Alert will be logged and pushed to mobile.
+      </p>
+      <div class="attack-grid">
+        <button class="attack-btn" onclick="attack(1)" id="btn-bot">
+          <span class="attack-btn-icon">🤖</span>Bot
+        </button>
+        <button class="attack-btn" onclick="attack(2)" id="btn-ddos">
+          <span class="attack-btn-icon">💥</span>DDoS
+        </button>
+        <button class="attack-btn" onclick="attack(3)" id="btn-dos">
+          <span class="attack-btn-icon">⚡</span>DoS
+        </button>
+        <button class="attack-btn" onclick="attack(4)" id="btn-portscan">
+          <span class="attack-btn-icon">🔍</span>PortScan
+        </button>
+        <button class="attack-btn" onclick="attack(5)" id="btn-brute">
+          <span class="attack-btn-icon">🔑</span>BruteForce
+        </button>
+        <button class="attack-btn" onclick="attack(6)" id="btn-web">
+          <span class="attack-btn-icon">🕸️</span>WebAttack
+        </button>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+      <div class="section-title">Severity Distribution</div>
+      <div class="chart-container">
+        <canvas id="chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Alerts -->
+  <div class="card">
+    <div class="flex items-center justify-between mb-4">
+      <div class="section-title" style="margin-bottom:0;flex:1">Recent Alerts</div>
+      <a href="/alerts" class="btn btn-ghost" style="font-size:12px;">View All →</a>
+    </div>
+    <div class="table-wrapper">
+      <table id="recent-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Attack Type</th>
+            <th>Severity</th>
+            <th>Source IP</th>
+            <th>Destination IP</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="recent-tbody">
+          <tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:32px;">No alerts yet — simulate an attack above</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
 </div>
 
-<h1>NIDS Dashboard</h1>
-
-<div class="cards">
-
-<div class="card">
-
-<h3>Total Alerts</h3>
-
-<p id="total"></p>
-
-</div>
-
-<div class="card">
-
-<h3>High Severity</h3>
-
-<p id="high"></p>
-
-</div>
-
-</div>
-
-<h2>Launch Attack</h2>
-
-<button onclick="attack(1)">Bot</button>
-<button onclick="attack(2)">DDoS</button>
-<button onclick="attack(3)">DoS</button>
-<button onclick="attack(4)">PortScan</button>
-<button onclick="attack(5)">BruteForce</button>
-<button onclick="attack(6)">WebAttack</button>
-
-<br><br>
-
-<canvas id="chart"></canvas>
+<!-- Toast container -->
+<div id="toast-container"></div>
 
 <script>
-
-async function attack(id){
-
-    const response = await fetch(`/api/simulate/${id}`)
-
-    const data = await response.json()
-
-    alert(
-
-        "Attack: " + data.attack +
-
-        "\nSeverity: " + data.severity +
-
-        "\nSource IP: " + data.src_ip +
-
-        "\nDestination IP: " + data.dst_ip
-
-    )
-
-    loadStats()
-}
-
-async function loadStats(){
-
-    const response = await fetch('/api/stats')
-
-    const data = await response.json()
-
-    document.getElementById("total").innerText =
-        data.total_alerts
-
-    document.getElementById("high").innerText =
-        data.high_alerts
-
-    chart.data.datasets[0].data = [
-
-        data.high_alerts,
-        data.medium_alerts,
-        data.low_alerts
-
-    ]
-
-    chart.update()
-}
-
-const ctx = document.getElementById('chart')
-
+// ── Chart ──
+const ctx = document.getElementById('chart');
 const chart = new Chart(ctx, {
-
-    type: 'pie',
-
-    data: {
-
-        labels: ['High', 'Medium', 'Low'],
-
-        datasets: [{
-
-            data: [0,0,0]
-
-        }]
+  type: 'doughnut',
+  data: {
+    labels: ['High', 'Medium', 'Low'],
+    datasets: [{
+      data: [0, 0, 0],
+      backgroundColor: [
+        'rgba(248,113,113,0.8)',
+        'rgba(251,191,36,0.8)',
+        'rgba(34,211,160,0.8)'
+      ],
+      borderColor: [
+        'rgba(248,113,113,0.2)',
+        'rgba(251,191,36,0.2)',
+        'rgba(34,211,160,0.2)'
+      ],
+      borderWidth: 1,
+      hoverOffset: 8
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '68%',
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: {
+          color: '#7ea3cc',
+          font: { family: 'Inter', size: 13 },
+          boxWidth: 12,
+          padding: 16
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(13,19,33,0.95)',
+        borderColor: 'rgba(56,189,248,0.2)',
+        borderWidth: 1,
+        titleColor: '#e2eaf8',
+        bodyColor: '#7ea3cc',
+        padding: 12
+      }
     }
-})
+  }
+});
 
-loadStats()
+// ── Toast ──
+function showToast(data) {
+  const container = document.getElementById('toast-container');
+  const sev = data.severity || 'Low';
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${sev.toLowerCase()}`;
+  const icons = { High: '🚨', Medium: '⚠️', Low: 'ℹ️' };
+  toast.innerHTML = `
+    <div class="toast-icon">${icons[sev] || '🔔'}</div>
+    <div class="toast-body">
+      <div class="toast-title">${data.attack} Detected</div>
+      <div class="toast-text">Severity: <strong>${sev}</strong> · ${data.src_ip} → ${data.dst_ip}</div>
+    </div>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'toast-out 0.3s ease forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
 
+// ── Simulate attack ──
+async function attack(id) {
+  const btns = document.querySelectorAll('.attack-btn');
+  btns.forEach(b => b.disabled = true);
+  try {
+    const response = await fetch(`/api/simulate/${id}`);
+    const data = await response.json();
+    showToast(data);
+    await loadStats();
+    await loadRecent();
+  } catch (e) {
+    console.error(e);
+  } finally {
+    btns.forEach(b => b.disabled = false);
+  }
+}
+
+// ── Load Stats ──
+async function loadStats() {
+  try {
+    const r = await fetch('/api/stats');
+    const d = await r.json();
+    document.getElementById('total').textContent = d.total_alerts ?? 0;
+    document.getElementById('high').textContent = d.high_alerts ?? 0;
+    document.getElementById('medium').textContent = d.medium_alerts ?? 0;
+    document.getElementById('low').textContent = d.low_alerts ?? 0;
+    chart.data.datasets[0].data = [d.high_alerts, d.medium_alerts, d.low_alerts];
+    chart.update();
+  } catch (e) { console.error(e); }
+}
+
+// ── Load Recent Alerts ──
+async function loadRecent() {
+  try {
+    const r = await fetch('/api/alerts');
+    const alerts = await r.json();
+    const tbody = document.getElementById('recent-tbody');
+    if (!alerts.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px;">No alerts yet — simulate an attack above</td></tr>`;
+      return;
+    }
+    const recent = alerts.slice(0, 8);
+    tbody.innerHTML = recent.map(a => `
+      <tr>
+        <td class="mono" style="color:var(--text-muted)">#${a.id}</td>
+        <td><strong>${a.attack_type}</strong></td>
+        <td><span class="badge ${a.severity}">${a.severity}</span></td>
+        <td class="mono">${a.src_ip}</td>
+        <td class="mono">${a.dst_ip}</td>
+        <td><span class="badge ${a.status === 'RESOLVED' ? 'badge-resolved' : 'badge-active'}">${a.status}</span></td>
+        <td><a href="/details/${a.id}" class="btn btn-ghost" style="font-size:12px;padding:5px 12px;">View</a></td>
+      </tr>`).join('');
+  } catch (e) { console.error(e); }
+}
+
+loadStats();
+loadRecent();
+setInterval(loadStats, 10000);
+setInterval(loadRecent, 10000);
 </script>
-
 </body>
-
 </html>

@@ -1,46 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Login</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIDS — Login</title>
+  <meta name="description" content="Network Intrusion Detection System — Secure Login">
+  <link rel="stylesheet" href="/static/nids.css">
 </head>
-<body style="font-family: Arial, sans-serif; background: #f4f4f4; margin: 0;">
+<body>
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">🛡️</div>
+      <div class="login-logo-title">NIDS Monitor</div>
+      <div class="login-logo-sub">Network Intrusion Detection System</div>
+    </div>
 
-<div style="
-    background: white;
-    width: 320px;
-    padding: 30px;
-    margin: 100px auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    text-align: center;
-">
+    <div class="form-group">
+      <label class="form-label" for="username">Username</label>
+      <input class="form-input" id="username" type="text" placeholder="admin" autocomplete="username">
+    </div>
 
-    <h1 style="margin-bottom: 20px; color: #333;">NIDS Login</h1>
+    <div class="form-group">
+      <label class="form-label" for="password">Password</label>
+      <input class="form-input" id="password" type="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
 
-    <input type="text" placeholder="Username" 
-        style="width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px;">
-    
-    <input type="password" placeholder="Password" 
-        style="width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px;">
+    <a href="/dashboard" class="btn-login" id="login-btn">Access Dashboard</a>
 
-    <br><br>
-
-    <a href="/dashboard" style="text-decoration: none;">
-        <button style="
-            width: 100%;
-            padding: 12px;
-            background: #195602;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        ">
-          Login
-        </button>
-    </a>
-
+    <div class="login-hint">Senior Project · Karabük University · Computer Engineering</div>
+  </div>
 </div>
-
 </body>
 </html>

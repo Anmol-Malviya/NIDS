@@ -27,17 +27,9 @@ export default function Login() {
   };
 
   return (
-    <div className="login-page" style={{ 
-      display: "flex", 
-      alignItems: "center", 
-      justifyContent: "center", 
-      gap: "60px",
-      minHeight: "100vh",
-      padding: "24px",
-      background: "linear-gradient(135deg, #f8f9fc 0%, #eef2ff 100%)" 
-    }}>
+    <div className="login-page">
       <div style={{ maxWidth: "500px", width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <h1 style={{ fontSize: "36px", fontWeight: 800, color: "var(--blue)", marginBottom: "16px", textAlign: "center" }}>
+        <h1 style={{ fontSize: "36px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "16px", textAlign: "center", letterSpacing: "-0.02em" }}>
           Secure Enterprise Security
         </h1>
         <p style={{ color: "var(--text-secondary)", fontSize: "16px", textAlign: "center", marginBottom: "40px" }}>

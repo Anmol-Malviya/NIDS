@@ -13,7 +13,6 @@ import androidx.compose.material3.Surface
 import androidx.core.content.ContextCompat
 import com.example.nidsmonitor.presentation.navigation.AppNavigation
 import com.example.nidsmonitor.viewmodel.NidsViewModel
-import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : ComponentActivity() {
     private val nidsViewModel: NidsViewModel by viewModels()
@@ -38,13 +37,20 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Subscribe to the network alerts stream channel matching your Flask backend topic
-        FirebaseMessaging.getInstance().subscribeToTopic("alerts")
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    println("✅ Successfully linked to remote NIDS notification channel.")
+        // Subscribe to FCM alerts topic — wrapped in try-catch for builds without real google-services.json
+        try {
+            com.google.firebase.messaging.FirebaseMessaging.getInstance()
+                .subscribeToTopic("alerts")
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        println("✅ Successfully linked to remote NIDS notification channel.")
+                    } else {
+                        println("⚠️ FCM subscription skipped — no valid Firebase config.")
+                    }
                 }
-            }
+        } catch (e: Exception) {
+            println("⚠️ Firebase not configured: ${e.message}")
+        }
 
         setContent {
             MaterialTheme {

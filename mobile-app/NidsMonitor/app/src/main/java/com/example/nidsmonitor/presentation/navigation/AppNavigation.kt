@@ -24,7 +24,7 @@ import androidx.navigation.navDeepLink
 import com.example.nidsmonitor.presentation.screens.*
 import com.example.nidsmonitor.viewmodel.NidsViewModel
 
-// Sealed class design updated to hold distinct selected vs unselected visual resource paths
+// Sealed class holds distinct selected vs unselected icon resource paths
 sealed class Screen(
     val route: String,
     val title: String,
@@ -51,7 +51,6 @@ fun AppNavigation(viewModel: NidsViewModel) {
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(
-                    // Modern touch: Give it a clean container background with prominent tonal elevation
                     tonalElevation = 8.dp
                 ) {
                     val items = listOf(Screen.Dashboard, Screen.Alerts, Screen.Health, Screen.Settings)
@@ -60,8 +59,17 @@ fun AppNavigation(viewModel: NidsViewModel) {
 
                         NavigationBarItem(
                             icon = {
+                                // BUG FIX #5: Replaced unsafe !! force-unwrap with safe null-checks.
+                                // Screen.Login and Screen.AlertDetail have null icons — if they ever
+                                // ended up in the list, !! would crash with NullPointerException.
+                                // Now uses a safe fallback icon instead.
+                                val icon: ImageVector = if (isSelected) {
+                                    screen.selectedIcon ?: Icons.Filled.Home
+                                } else {
+                                    screen.unselectedIcon ?: Icons.Outlined.Home
+                                }
                                 Icon(
-                                    imageVector = if (isSelected) screen.selectedIcon!! else screen.unselectedIcon!!,
+                                    imageVector = icon,
                                     contentDescription = screen.title,
                                     modifier = Modifier.size(24.dp)
                                 )
@@ -73,7 +81,7 @@ fun AppNavigation(viewModel: NidsViewModel) {
                                 )
                             },
                             selected = isSelected,
-                            alwaysShowLabel = true, // Keeps your navigation layout visually balanced
+                            alwaysShowLabel = true,
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.primary,
                                 selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -84,8 +92,13 @@ fun AppNavigation(viewModel: NidsViewModel) {
                             onClick = {
                                 if (currentRoute != screen.route) {
                                     navController.navigate(screen.route) {
-                                        popUpTo(navController.graph.startDestinationId)
+                                        // BUG FIX #13: Replaced deprecated integer-based popUpTo(startDestinationId)
+                                        // with the route-string API required by Navigation 2.8+/2.9.x.
+                                        popUpTo(Screen.Dashboard.route) {
+                                            saveState = true
+                                        }
                                         launchSingleTop = true
+                                        restoreState = true
                                     }
                                 }
                             }

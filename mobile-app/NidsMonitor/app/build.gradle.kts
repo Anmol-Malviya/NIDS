@@ -2,21 +2,23 @@ plugins {
     // 1. Standard Android application configuration structure
     alias(libs.plugins.android.application)
 
-    // 2. Activates the Compose layout compiler structures
+    // 2. kotlin.compose (2.x) already applies kotlin.android internally in AGP 9.x.
+    //    Adding kotlin.android separately caused: "extension 'kotlin' already registered".
+    //    Fix: kotlin.compose alone is sufficient for both Kotlin + Compose compilation.
     alias(libs.plugins.kotlin.compose)
 
-    // 3. ACTIVATES FIREBASE: Uses the correct alias format to fix the line 3 compilation crash
+    // 3. ACTIVATES FIREBASE
     alias(libs.plugins.google.services)
 }
 
 android {
     namespace = "com.example.nidsmonitor"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.nidsmonitor"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -34,9 +36,16 @@ android {
     }
 
     compileOptions {
-        // Upgrades toolchain rendering to Java 17 compatibility standards
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    // JVM target set via the new Kotlin 2.x / AGP 9.x compilerOptions DSL.
+    // kotlinOptions{} is removed in Kotlin 2.x when applied via kotlin.compose.
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
 
     buildFeatures {
@@ -50,45 +59,43 @@ android {
 }
 
 dependencies {
-    // Core AndroidX and Lifecycle libraries (Forced to stable SDK 35 versions)
-    implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")
-    implementation("androidx.activity:activity-compose:1.9.0")
+    // BUG FIX #1: Replaced all hardcoded version strings with version catalog aliases
+    // to eliminate Gradle resolution conflicts with libs.versions.toml
 
-    // Jetpack Compose Bill of Materials (BoM Updated to a universally available SDK 35 stable version)
-    implementation(platform("androidx.compose:compose-bom:2024.10.00"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
+    // Core AndroidX and Lifecycle
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
 
-    // Explicitly declaring material3 version handles the local resolution warning seamlessly
-    implementation("androidx.compose.material3:material3:1.3.0")
+    // Jetpack Compose Bill of Materials (managed via version catalog)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+
+    // Jetpack Compose Navigation & Shared ViewModel Support
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // Networking Components (Retrofit 3.x via version catalog)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+
+    // Firebase Ecosystem (via version catalog)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.analytics)
+
+    // Extended Material Icons
+    implementation("androidx.compose.material:material-icons-extended")
 
     // Testing Dependencies
     testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.10.00"))
-
-    // Explicitly versioning the test artifact clears the final resolution warning
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.0")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
-
-    // Networking Components
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-
-    // Jetpack Compose Navigation & Shared ViewModel Support
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
-    implementation("androidx.fragment:fragment-ktx:1.6.2")
-
-    // Firebase Ecosystem
-    implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
-    implementation("com.google.firebase:firebase-messaging")
-    implementation("com.google.firebase:firebase-analytics")
-
-    // Add this line to access advanced icons:
-    implementation("androidx.compose.material:material-icons-extended")
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

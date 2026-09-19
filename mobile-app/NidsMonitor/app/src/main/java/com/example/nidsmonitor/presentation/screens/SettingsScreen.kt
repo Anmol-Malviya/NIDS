@@ -7,10 +7,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.DisplaySettings
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nidsmonitor.data.NetworkManager
@@ -32,9 +31,10 @@ fun SettingsScreen(onLogout: () -> Unit, viewModel: NidsViewModel) {
     var notificationsEnabled by remember { mutableStateOf(true) }
     var darkMode by remember { mutableStateOf(false) }
 
-    // State checking connection vitality status.
-    // In production, your viewModel could update this by checking if a simple ping to /api/health succeeds.
-    val isConnected by remember { mutableStateOf(true) }
+    // BUG FIX #8: Derive connection status from real ViewModel health state instead of
+    // hardcoding `true`. The old code ALWAYS showed "Endpoint Connected" — even when offline.
+    // Now: isConnected = true only if the health data has been successfully fetched.
+    val isConnected by viewModel.isConnected.collectAsState()
 
     Column(
         modifier = Modifier
@@ -60,6 +60,7 @@ fun SettingsScreen(onLogout: () -> Unit, viewModel: NidsViewModel) {
                     value = inputIp,
                     onValueChange = { inputIp = it },
                     label = { Text("Server IP Address") },
+                    placeholder = { Text("e.g. 192.168.1.103:5000") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -69,9 +70,11 @@ fun SettingsScreen(onLogout: () -> Unit, viewModel: NidsViewModel) {
 
                 Button(
                     onClick = {
-                        val formattedIp = if (inputIp.endsWith("/")) inputIp else "$inputIp/"
-                        NetworkManager.updateBaseUrl(formattedIp)
+                        // NetworkManager.updateBaseUrl() now handles http:// prefix & trailing slash (BUG FIX #9)
+                        NetworkManager.updateBaseUrl(inputIp)
                         activeIp = NetworkManager.currentIp
+                        // Refresh data immediately after changing the server target
+                        viewModel.refresh()
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
@@ -81,12 +84,11 @@ fun SettingsScreen(onLogout: () -> Unit, viewModel: NidsViewModel) {
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Dynamic Status Validation Box Row
+                // Dynamic Status Indicator — now reflects actual server connectivity
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Live Endpoint Active Indicator Dot
                     Box(
                         modifier = Modifier
                             .size(10.dp)
@@ -186,7 +188,7 @@ fun SettingsScreen(onLogout: () -> Unit, viewModel: NidsViewModel) {
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Icon(imageVector = Icons.Default.Logout, contentDescription = null)
+            Icon(imageVector = Icons.AutoMirrored.Filled.Logout, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text("Terminate Console Session", fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }

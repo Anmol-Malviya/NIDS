@@ -8,16 +8,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.core.content.ContextCompat
 import com.example.nidsmonitor.presentation.navigation.AppNavigation
+import com.example.nidsmonitor.ui.theme.NidsMonitorTheme
 import com.example.nidsmonitor.viewmodel.NidsViewModel
 
 class MainActivity : ComponentActivity() {
     private val nidsViewModel: NidsViewModel by viewModels()
 
-    // 🌟 NEW: Launcher to handle the user's permission response
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -29,7 +28,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 🌟 NEW: Explicitly trigger the runtime dialog prompt for target SDK 33+
+        // Trigger runtime notification permission dialog for API 33+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
                 PackageManager.PERMISSION_GRANTED) {
@@ -53,8 +52,10 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            MaterialTheme {
-                Surface(color = MaterialTheme.colorScheme.background) {
+            // BUG FIX #4: Use NidsMonitorTheme instead of plain MaterialTheme.
+            // The old code bypassed the custom colour scheme, dark mode support, and typography.
+            NidsMonitorTheme {
+                Surface(color = androidx.compose.material3.MaterialTheme.colorScheme.background) {
                     AppNavigation(viewModel = nidsViewModel)
                 }
             }

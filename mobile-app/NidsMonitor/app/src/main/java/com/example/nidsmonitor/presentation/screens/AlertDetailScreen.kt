@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nidsmonitor.viewmodel.NidsViewModel
@@ -27,6 +26,11 @@ import com.example.nidsmonitor.viewmodel.NidsViewModel
 fun AlertDetailScreen(alertId: Int, viewModel: NidsViewModel, onBack: () -> Unit) {
     val alerts by viewModel.alerts.collectAsState()
     val alert = alerts.find { it.id == alertId }
+
+    // BUG FIX #11: Track resolving state to prevent navigating away before API completes.
+    // The old code called resolveAlert() and onBack() in the same lambda, causing a race
+    // condition where navigation happened before the async resolve finished.
+    var isResolving by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -127,7 +131,6 @@ fun AlertDetailScreen(alertId: Int, viewModel: NidsViewModel, onBack: () -> Unit
 
             DetailSectionTitle(icon = Icons.Default.NetworkCheck, title = "Network Packet Details")
 
-            // Network Flow Information Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
@@ -143,7 +146,6 @@ fun AlertDetailScreen(alertId: Int, viewModel: NidsViewModel, onBack: () -> Unit
 
             DetailSectionTitle(icon = Icons.Default.Gavel, title = "AI Engine Diagnostics & Logs")
 
-            // Analytics Information Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
@@ -155,19 +157,40 @@ fun AlertDetailScreen(alertId: Int, viewModel: NidsViewModel, onBack: () -> Unit
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Action Button
+            // BUG FIX #11: Resolve button now shows a loading state and only calls onBack()
+            // AFTER the API resolveAlert() completes via the onComplete callback.
+            // The old code called onBack() immediately in the same click lambda, causing
+            // navigation before the async operation finished.
             if (alert.status != "RESOLVED") {
                 Button(
-                    onClick = { viewModel.resolveAlert(alert.id); onBack() },
+                    onClick = {
+                        if (!isResolving) {
+                            isResolving = true
+                            viewModel.resolveAlert(alert.id) {
+                                onBack() // Navigate ONLY after resolve completes
+                            }
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isResolving
                 ) {
-                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Mark Incident As Resolved", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    if (isResolving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Resolving...", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    } else {
+                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Mark Incident As Resolved", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         } else {

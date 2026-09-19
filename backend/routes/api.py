@@ -261,3 +261,35 @@ def resolve_alert(id):
     return jsonify({
         "message": "resolved"
     })
+
+
+# REAL-TIME FEED — returns recent events, optionally only those after ?since=<id>
+from flask import request as flask_request
+
+@api_bp.route("/api/realtime")
+def realtime_feed():
+    since_id = flask_request.args.get("since", type=int, default=0)
+    limit = flask_request.args.get("limit", type=int, default=20)
+
+    conn = get_db()
+
+    if since_id > 0:
+        # Incremental mode: only return new alerts after the given ID
+        rows = conn.execute("""
+        SELECT id, timestamp, src_ip, dst_ip, attack_type, severity, status
+        FROM alerts
+        WHERE id > ?
+        ORDER BY id DESC
+        LIMIT ?
+        """, (since_id, limit)).fetchall()
+    else:
+        # Initial load: return last N events
+        rows = conn.execute("""
+        SELECT id, timestamp, src_ip, dst_ip, attack_type, severity, status
+        FROM alerts
+        ORDER BY id DESC
+        LIMIT ?
+        """, (limit,)).fetchall()
+
+    conn.close()
+    return jsonify([dict(row) for row in rows])

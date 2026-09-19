@@ -22,6 +22,7 @@ import {
   CheckCircle,
   Activity,
 } from "lucide-react";
+import RealtimeMonitor from "../../components/RealtimeMonitor";
 import dynamic from "next/dynamic";
 import softwareDevAnim from "../../../public/Software development Scene.json";
 
@@ -322,6 +323,9 @@ export default function Dashboard() {
           <MiniBarChart color="#10b981" />
         </div>
       </div>
+
+      {/* ─── Real-Time Monitor ────────────────────────── */}
+      <RealtimeMonitor backendOffline={backendOffline} />
 
       {/* ─── Mid Section ─────────────────────────────── */}
       <div className="two-col mb-8 animate-stagger">
